@@ -17,11 +17,11 @@ AGE_WEIGHTS = [4, 4, 2, 1]
 
 def generate_user():
     return {
-        "user_id":str(uuid.uuid4()),
-        "city": random.choices(CITIES, weights = CITY_WEIGHTS)[0],
+        "user_id":str(uuid.uuid4()) if random.random() > 0.02 else None,
+        "city": random.choices(CITIES, weights = CITY_WEIGHTS)[0] if random.random() > 0.05 else None,
         "device": random.choices(DEVICES, weights=DEVICE_WEIGHTS)[0],
-        "signup_date": str(fake.date_between(start_date='-2y', end_date='today')),
-        "age_group": random.choices(AGE_GROUPS, weights=AGE_WEIGHTS)[0]
+        "signup_date": fake.date_between(start_date='-2y', end_date='today'),
+        "age_group": random.choices(AGE_GROUPS, weights=AGE_WEIGHTS)[0] if random.random() > 0.1 else None
     }
 
 def generate_users(n=100):
@@ -36,7 +36,7 @@ def load_to_bigquery(records):
     table_id = "user-event-analytics-pipeline.uea_raw.users"
         
     schema = [
-        bigquery.SchemaField("user_id", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("user_id", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("city", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("device", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("signup_date", "DATE", mode="NULLABLE"),

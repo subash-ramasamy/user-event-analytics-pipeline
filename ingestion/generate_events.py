@@ -21,16 +21,17 @@ def generate_event(sessions):
     session_start = session['session_start']
     session_end = session['session_end']
     
-    event_timestamp = fake.date_time_between(
-        start_date=session_start, 
-        end_date=session_end
-    )
+    # 2% chance timestamp is outside session window
+    if random.random() > 0.02:
+        event_timestamp = fake.date_time_between(start_date=session_start, end_date=session_end)
+    else:
+        event_timestamp = session_end + timedelta(minutes=random.randint(5, 60))
     
     return {
         "event_id": str(uuid.uuid4()),
         "session_id": session['session_id'],
         "user_id": session['user_id'],
-        "event_type": random.choices(EVENT_TYPES, weights=EVENT_WEIGHTS)[0],
+        "event_type": random.choices(EVENT_TYPES, weights=EVENT_WEIGHTS)[0] if random.random() > 0.01 else 'payment_failed',
         "event_timestamp": event_timestamp
     }
 
@@ -58,7 +59,8 @@ def load_to_bigquery(records):
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND
     )
     
-    client.load_table_from_dataframe(df, table_id, job_config=job_config)
+    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+    job.result()
     print(f"Loaded {len(df)} rows to {table_id}")
 
 if __name__ == "__main__":
