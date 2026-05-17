@@ -48,7 +48,8 @@ def load_to_bigquery(records):
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND
     )
     
-    client.load_table_from_dataframe(df, table_id, job_config=job_config)
+    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+    job.result()
     print(f"Loaded {len(df)} rows to {table_id}")
 
 if __name__ == "__main__":
