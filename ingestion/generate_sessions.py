@@ -4,15 +4,22 @@ import pandas as pd
 from faker import Faker
 from google.cloud import bigquery
 from datetime import timedelta, datetime
+import os
+from dotenv import load_dotenv
+import logging
+logger = logging.getLogger(__name__)
 
 fake = Faker('en_IN')
+
+load_dotenv()
+PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 
 DEVICES = ['Android', 'iOS', 'Web']
 DEVICE_WEIGHTS = [7, 2, 1]
 
 def get_user_ids():
-    client = bigquery.Client(project = "user-event-analytics-pipeline")
-    query = "SELECT user_id FROM `user-event-analytics-pipeline.uea_raw.users` WHERE user_id IS NOT NULL"
+    client = bigquery.Client(project = PROJECT_ID)
+    query = f"SELECT user_id FROM `{PROJECT_ID}.uea_raw.users` WHERE user_id IS NOT NULL"
     df = client.query(query).to_dataframe()
     return df["user_id"].to_list()
 
@@ -50,8 +57,8 @@ def generate_sessions(user_ids, n = 200):
 
 def load_to_bigquery(records):
     df = pd.DataFrame(records)
-    client = bigquery.Client(project="user-event-analytics-pipeline")
-    table_id = "user-event-analytics-pipeline.uea_raw.sessions"
+    client = bigquery.Client(project=PROJECT_ID)
+    table_id = f"{PROJECT_ID}.uea_raw.sessions"
     
     schema = [
         bigquery.SchemaField("session_id", "STRING", mode="REQUIRED"),
@@ -65,10 +72,16 @@ def load_to_bigquery(records):
         schema=schema,
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND
     )
-    
-    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
-    job.result()
-    print(f"Loaded {len(df)} rows to {table_id}")
+    try:
+        job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+        job.result()
+        logger.info(f"Loaded {len(df)} rows to {table_id}")
+        table = client.get_table(table_id)
+        logger.info(f"Total rows in {table_id}: {table.num_rows:,}")
+    except Exception as e:
+        logger.error(f"Failed to load to {table_id}:{e}")
+        raise
+
 
 if __name__ == "__main__":
     user_ids = get_user_ids()

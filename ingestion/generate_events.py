@@ -1,9 +1,16 @@
 import uuid
 import random
 import pandas as pd
+import os
+from dotenv import load_dotenv
 from faker import Faker
 from google.cloud import bigquery
 from datetime import timedelta, datetime
+import logging
+logger = logging.getLogger(__name__)
+
+load_dotenv()
+PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 
 fake = Faker('en_IN')
 
@@ -11,8 +18,8 @@ EVENT_TYPES = ['user_searched', 'restaurant_clicked', 'cart_added', 'order_place
 EVENT_WEIGHTS = [35, 25, 20, 12, 8]
 
 def get_sessions():
-    client = bigquery.Client(project="user-event-analytics-pipeline")
-    query = "SELECT session_id,user_id, session_start, session_end FROM `user-event-analytics-pipeline.uea_raw.sessions`"
+    client = bigquery.Client(project=PROJECT_ID)
+    query = f"SELECT session_id,user_id, session_start, session_end FROM `{PROJECT_ID}.uea_raw.sessions`"
     df = client.query(query).to_dataframe()
     return df.to_dict('records')
 
@@ -43,8 +50,8 @@ def generate_events(sessions, n=700):
 
 def load_to_bigquery(records):
     df = pd.DataFrame(records)
-    client = bigquery.Client(project="user-event-analytics-pipeline")
-    table_id = "user-event-analytics-pipeline.uea_raw.events"
+    client = bigquery.Client(project=PROJECT_ID)
+    table_id = f"{PROJECT_ID}.uea_raw.events"
     
     schema = [
         bigquery.SchemaField("event_id", "STRING", mode="REQUIRED"),
@@ -58,10 +65,15 @@ def load_to_bigquery(records):
         schema=schema,
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND
     )
-    
-    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
-    job.result()
-    print(f"Loaded {len(df)} rows to {table_id}")
+    try:
+        job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+        job.result()
+        logger.info(f"Loaded {len(df)} rows to {table_id}")
+        table = client.get_table(table_id)
+        logger.info(f"Total rows in {table_id}: {table.num_rows:,}")
+    except Exception as e:
+        logger.error(f"failed to load to {table_id}: {e}")
+        raise
 
 if __name__ == "__main__":
     sessions = get_sessions()

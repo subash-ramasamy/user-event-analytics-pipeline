@@ -3,8 +3,15 @@ import random
 import pandas as pd
 from faker import Faker
 from google.cloud import bigquery
+import os
+from dotenv import load_dotenv
+import logging
+logger = logging.getLogger(__name__)
 
 fake = Faker('en_IN')
+
+load_dotenv()
+PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 
 CITIES = ['Mumbai', 'Delhi', 'Bengaluru', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata']
 CITY_WEIGHTS = [3, 3, 4, 2, 2, 2, 1]
@@ -32,8 +39,8 @@ def generate_users(n=100):
 
 def load_to_bigquery(records):
     df = pd.DataFrame(records)
-    client = bigquery.Client(project="user-event-analytics-pipeline")
-    table_id = "user-event-analytics-pipeline.uea_raw.users"
+    client = bigquery.Client(project=PROJECT_ID)
+    table_id = f"{PROJECT_ID}.uea_raw.users"
         
     schema = [
         bigquery.SchemaField("user_id", "STRING", mode="NULLABLE"),
@@ -47,10 +54,15 @@ def load_to_bigquery(records):
         schema=schema,
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND
     )
-    
-    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
-    job.result()
-    print(f"Loaded {len(df)} rows to {table_id}")
+    try:
+        job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+        job.result()
+        logger.info(f"Loaded {len(df)} rows to {table_id}")
+        table = client.get_table(table_id)
+        logger.info(f"Total rows in {table_id}: {table.num_rows:,}")
+    except Exception as e:
+        logger.error(f"Failed to load to {table_id}:{e}")
+        raise
 
 if __name__ == "__main__":
     records = generate_users(100)
