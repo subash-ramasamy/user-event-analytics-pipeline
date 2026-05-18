@@ -3,6 +3,7 @@ import random
 import pandas as pd
 from faker import Faker
 from google.cloud import bigquery
+from datetime import timedelta, datetime
 import os
 from dotenv import load_dotenv
 import logging
@@ -27,15 +28,21 @@ def generate_user():
         "user_id":str(uuid.uuid4()) if random.random() > 0.02 else None,
         "city": random.choices(CITIES, weights = CITY_WEIGHTS)[0] if random.random() > 0.05 else None,
         "device": random.choices(DEVICES, weights=DEVICE_WEIGHTS)[0],
-        "signup_date": fake.date_between(start_date='-2y', end_date='today'),
+        "signup_date": datetime.now().date(),
         "age_group": random.choices(AGE_GROUPS, weights=AGE_WEIGHTS)[0] if random.random() > 0.1 else None
     }
 
-def generate_users(n=100):
+def generate_users(n=20):
     records = []
     for _ in range(n):
         records.append(generate_user())
     return records
+
+def get_existing_user_ids():
+    client = bigquery.Client(project=PROJECT_ID)
+    query = f"SELECT DISTINCT user_id FROM `{PROJECT_ID}.uea_raw.users` WHERE user_id IS NOT NULL"
+    df = client.query(query).to_dataframe()
+    return df["user_id"].tolist()
 
 def load_to_bigquery(records):
     df = pd.DataFrame(records)
@@ -65,5 +72,5 @@ def load_to_bigquery(records):
         raise
 
 if __name__ == "__main__":
-    records = generate_users(100)
+    records = generate_users(20)
     load_to_bigquery(records)

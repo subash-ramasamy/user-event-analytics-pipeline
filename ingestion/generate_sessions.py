@@ -33,7 +33,7 @@ def generate_session(user_ids):
     
     generated_session_ids.append(session_id)
     
-    start_time = fake.date_time_between(start_date='-1y', end_date='now')
+    start_time = datetime.now() - timedelta(minutes=random.randint(1, 1440))
     
     # 5% chance session_end is before session_start
     if random.random() > 0.05:
