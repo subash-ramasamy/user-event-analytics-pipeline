@@ -23,16 +23,9 @@ def get_user_ids():
     df = client.query(query).to_dataframe()
     return df["user_id"].to_list()
 
-generated_session_ids =[]
-
 def generate_session(user_ids):
-    if random.random() > 0.03 or len(generated_session_ids) == 0:
-        session_id = str(uuid.uuid4())
-    else:
-        session_id = random.choice(generated_session_ids)
-    
-    generated_session_ids.append(session_id)
-    
+
+    session_id = str(uuid.uuid4())
     start_time = datetime.now() - timedelta(minutes=random.randint(1, 1440))
     
     # 5% chance session_end is before session_start
