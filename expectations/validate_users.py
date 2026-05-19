@@ -49,7 +49,9 @@ def validate_users(df):
     results = validator.validate()
     
     if not results["success"]:
-        logger.error(f"Users validation failed: {results['statistics']}")
+        for result in results["results"]:
+            if not result["success"]:
+                logger.error(f"Failed expectation: {result['expectation_config']['expectation_type']} on column: {result['expectation_config']['kwargs']}")
         raise ValueError("Users data quality check failed")
     
     logger.info(f"Users validation passed: {results['statistics']}")
