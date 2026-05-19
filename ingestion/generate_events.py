@@ -14,8 +14,8 @@ PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 
 fake = Faker('en_IN')
 
-EVENT_TYPES = ['user_searched', 'restaurant_clicked', 'cart_added', 'order_placed', 'order_dropped']
-EVENT_WEIGHTS = [35, 25, 20, 12, 8]
+EVENT_TYPES = ['user_searched', 'restaurant_clicked', 'cart_added', 'order_placed', 'order_dropped', 'payment_failed']
+EVENT_WEIGHTS = [35, 25, 20, 12, 7, 1]
 
 def get_sessions():
     client = bigquery.Client(project=PROJECT_ID)
@@ -38,7 +38,7 @@ def generate_event(sessions):
         "event_id": str(uuid.uuid4()),
         "session_id": session['session_id'],
         "user_id": session['user_id'],
-        "event_type": random.choices(EVENT_TYPES, weights=EVENT_WEIGHTS)[0] if random.random() > 0.01 else 'payment_failed',
+        "event_type": random.choices(EVENT_TYPES, weights=EVENT_WEIGHTS)[0],
         "event_timestamp": event_timestamp
     }
 
