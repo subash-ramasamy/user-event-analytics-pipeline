@@ -1,0 +1,33 @@
+version: 2
+
+sources:
+  - name: uea_raw
+    database: user-event-analytics-pipeline
+    schema: uea_raw
+    tables:
+      - name: users
+        columns:
+          - name: user_id
+            tests:
+              - unique
+      - name: sessions
+        columns:
+          - name: session_id
+            tests:
+              - unique
+              - not_null
+          - name: user_id
+            tests:
+              - not_null
+      - name: events
+        columns:
+          - name: event_id
+            tests:
+              - unique
+              - not_null
+          - name: session_id
+            tests:
+              - not_null
+          - name: user_id
+            tests:
+              - not_null

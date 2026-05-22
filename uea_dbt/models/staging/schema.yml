@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: stg_users
+    columns:
+      - name: user_id
+        tests:
+          - unique
+          - not_null
+      - name: city
+        tests:
+          - not_null
+      - name: device
+        tests:
+          - not_null
+      - name: age_group
+        tests:
+          - not_null
+
+  - name: stg_sessions
+    columns:
+      - name: session_id
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        tests:
+          - not_null
+      - name: session_duration_seconds
+        tests:
+          - not_null
+
+  - name: stg_events
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+      - name: session_id
+        tests:
+          - not_null
+      - name: user_id
+        tests:
+          - not_null
+      - name: event_type
+        tests:
+          - not_null

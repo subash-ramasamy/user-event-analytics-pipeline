@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: mart_funnel_analysis
+    columns:
+      - name: event_date
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_user_segments
+    columns:
+      - name: user_id
+        tests:
+          - unique
+          - not_null
+      - name: user_segment
+        tests:
+          - not_null
+          - accepted_values:
+              name: accepted_values_user_segment
+              values: ['Never Ordered', 'Low Value', 'Mid Value', 'High Value']
+              
+  - name: mart_session_behaviour
+    columns:
+      - name: session_id
+        tests:
+          - unique
+          - not_null
+      - name: session_length_category
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Quick', 'Normal', 'Long']
+
+  - name: mart_retention_cohorts
+    columns:
+      - name: cohort_week
+        tests:
+          - not_null
+      - name: retention_rate
+        tests:
+          - not_null
