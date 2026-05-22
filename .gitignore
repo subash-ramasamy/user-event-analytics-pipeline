@@ -223,3 +223,4 @@ pyrightconfig.json
 .history
 .ionide
 venv_de/
+airflow/simple_auth_manager_passwords.json.generated
