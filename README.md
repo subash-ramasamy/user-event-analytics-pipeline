@@ -13,7 +13,7 @@ Faker → Python → BigQuery → Great Expectations → dbt → Airflow → Loo
 **User Behaviour & Funnel Intelligence Dashboard**
 
 <!-- Replace the line below with your actual screenshot -->
-![Dashboard](assets/dashboard.png)
+![Dashboard](assets/dashboard.jpeg)
 
 <!-- Replace the URL below with your actual Looker Studio link -->
 [View Live Dashboard](https://datastudio.google.com/reporting/64f92900-a743-4457-966f-bc7accc8c3ba)
